@@ -2,7 +2,7 @@
 name: ahok-memory
 description: "Long-term memory storage and retrieval for AI agents. Use when: remembering user preferences, storing context, recalling past conversations, personalizing responses, building agent memory."
 source: ahok-memory-cloud
-api_base: https://zqmt62peqz.us-east-1.awsapprunner.com
+api_base: https://memtool.ahok.io
 ---
 
 # Ahok Memory Cloud
@@ -18,7 +18,7 @@ Add this to your Claude Desktop config (`~/Library/Application Support/Claude/cl
   "mcpServers": {
     "ahok-memory": {
       "command": "npx",
-      "args": ["-y", "openmemory-js", "mcp"],
+      "args": ["-y", "ahok-skill", "mcp"],
       "env": {
         "OM_API_KEY": "your-api-key-here"
       }
@@ -33,7 +33,7 @@ Or connect to the hosted MCP endpoint:
 {
   "mcpServers": {
     "ahok-memory": {
-      "url": "https://zqmt62peqz.us-east-1.awsapprunner.com/mcp",
+      "url": "https://memtool.ahok.io/mcp",
       "headers": {
         "x-api-key": "your-api-key-here"
       }
@@ -56,12 +56,12 @@ Once connected, Claude will have access to:
 
 ### Authentication
 All requests require an API key in the `x-api-key` header.
-Get your key from: https://your-dashboard-url/dashboard
+Get your API key from the Ahok Memory dashboard.
 
 ### Store a Memory
 
 ```bash
-curl -X POST https://zqmt62peqz.us-east-1.awsapprunner.com/memory/add \
+curl -X POST https://memtool.ahok.io/memory/add \
   -H "Content-Type: application/json" \
   -H "x-api-key: YOUR_API_KEY" \
   -d '{"content": "User prefers dark mode", "user_id": "user123"}'
@@ -70,7 +70,7 @@ curl -X POST https://zqmt62peqz.us-east-1.awsapprunner.com/memory/add \
 ### Recall Memories
 
 ```bash
-curl -X POST https://zqmt62peqz.us-east-1.awsapprunner.com/query \
+curl -X POST https://memtool.ahok.io/query \
   -H "Content-Type: application/json" \
   -H "x-api-key: YOUR_API_KEY" \
   -d '{"query": "What are the user preferences?", "k": 5}'
@@ -160,46 +160,112 @@ Memories are automatically classified into sectors:
 ### Python
 ```python
 import requests
+import os
 
-API_KEY = "your-api-key"
-BASE_URL = "https://zqmt62peqz.us-east-1.awsapprunner.com"
+API_KEY = os.getenv("AHOK_API_KEY")
+BASE_URL = "https://memtool.ahok.io"
 
-def remember(content, user_id=None):
-    return requests.post(f"{BASE_URL}/memory/add", 
+def remember(content, user_id=None, tags=None):
+    return requests.post(f"{BASE_URL}/memory/add",
         headers={"x-api-key": API_KEY},
-        json={"content": content, "user_id": user_id}
+        json={"content": content, "user_id": user_id, "tags": tags}
     ).json()
 
-def recall(query, k=5):
+def recall(query, k=5, user_id=None):
     return requests.post(f"{BASE_URL}/query",
         headers={"x-api-key": API_KEY},
-        json={"query": query, "k": k}
+        json={"query": query, "k": k, "user_id": user_id}
+    ).json()
+
+def reinforce(memory_id, boost_factor=1.5):
+    return requests.post(f"{BASE_URL}/openmemory/reinforce",
+        headers={"x-api-key": API_KEY},
+        json={"memory_id": memory_id, "boost_factor": boost_factor}
     ).json()
 ```
 
 ### JavaScript/TypeScript
 ```typescript
-const API_KEY = "your-api-key";
-const BASE_URL = "https://zqmt62peqz.us-east-1.awsapprunner.com";
+const API_KEY = process.env.AHOK_API_KEY;
+const BASE_URL = "https://memtool.ahok.io";
 
-async function remember(content: string, userId?: string) {
+async function remember(content: string, userId?: string, tags?: string[]) {
   const res = await fetch(`${BASE_URL}/memory/add`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
-    body: JSON.stringify({ content, user_id: userId })
+    headers: { "Content-Type": "application/json", "x-api-key": API_KEY! },
+    body: JSON.stringify({ content, user_id: userId, tags })
   });
   return res.json();
 }
 
-async function recall(query: string, k = 5) {
+async function recall(query: string, k = 5, userId?: string) {
   const res = await fetch(`${BASE_URL}/query`, {
-    method: "POST", 
-    headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
-    body: JSON.stringify({ query, k })
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-api-key": API_KEY! },
+    body: JSON.stringify({ query, k, user_id: userId })
+  });
+  return res.json();
+}
+
+async function reinforce(memoryId: string, boostFactor = 1.5) {
+  const res = await fetch(`${BASE_URL}/openmemory/reinforce`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-api-key": API_KEY! },
+    body: JSON.stringify({ memory_id: memoryId, boost_factor: boostFactor })
   });
   return res.json();
 }
 ```
+
+## Security Best Practices
+
+### API Key Management
+1. **Never commit API keys to version control**
+   - Use `.gitignore` to exclude `.env` files
+   - Rotate keys regularly
+   - Use different keys for dev/staging/production
+
+2. **Environment Variables**
+   ```bash
+   # .env file (never commit!)
+   AHOK_API_KEY=your-actual-api-key-here
+   ```
+
+3. **Python with dotenv:**
+   ```python
+   from dotenv import load_dotenv
+   import os
+
+   load_dotenv()
+   API_KEY = os.getenv("AHOK_API_KEY")
+   ```
+
+4. **Node.js with dotenv:**
+   ```typescript
+   import dotenv from 'dotenv';
+   dotenv.config();
+
+   const API_KEY = process.env.AHOK_API_KEY;
+   ```
+
+### Data Privacy
+1. **Always use `user_id`** for multi-user applications to ensure data isolation
+2. **Use workspaces** (`memory_key_id`) to separate contexts/projects
+3. **Implement access controls** at your application layer
+4. **Audit stored memories** regularly for PII and sensitive information
+5. **Tag sensitive data** appropriately for easier management
+
+### Performance & Rate Limiting
+1. **Implement client-side rate limiting** to prevent API abuse
+2. **Cache frequently accessed memories** to reduce API calls
+3. **Use pagination** (`l` and `u` parameters) for large result sets
+4. **Batch operations** when possible to reduce round trips
+
+### Network Security
+1. **Always use HTTPS** (the API base URL is already HTTPS)
+2. **Validate SSL certificates** in production
+3. **Consider using API gateways** for additional security layers
+4. **Monitor API usage** for unusual patterns
 
 ## Claude/Anthropic Integration
 

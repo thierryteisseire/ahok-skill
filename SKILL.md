@@ -56,3 +56,179 @@ Or connect via hosted MCP:
   }
 }
 ```
+
+## Available MCP Tools
+
+Once connected, Claude will have access to:
+
+- **openmemory_query** - Search memories semantically
+- **openmemory_store** - Save new memories
+- **openmemory_list** - List recent memories
+- **openmemory_get** - Fetch a specific memory
+- **openmemory_reinforce** - Boost memory importance
+
+## API Endpoints
+
+### Authentication
+All requests require an API key in the `x-api-key` header.
+Get your API key from the Ahok Memory dashboard.
+
+### POST /memory/add
+Store a new memory.
+
+**Request Body:**
+```json
+{
+  "content": "The information to remember",
+  "user_id": "optional-user-identifier",
+  "tags": ["optional", "tags"],
+  "metadata": {"any": "json object"},
+  "memory_key_id": "optional-workspace-uuid"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "primary_sector": "semantic|procedural|episodic",
+  "sectors": ["semantic"],
+  "chunks": 1
+}
+```
+
+### POST /query
+Search memories semantically.
+
+**Request Body:**
+```json
+{
+  "query": "natural language search",
+  "k": 5,
+  "user_id": "optional-filter"
+}
+```
+
+**Response:**
+```json
+{
+  "query": "natural language search",
+  "result": "Formatted memory results as text",
+  "matches": [
+    {"id": "uuid", "content": "...", "score": 0.95}
+  ]
+}
+```
+
+### POST /openmemory/reinforce
+Reinforce a memory's importance (prevents decay).
+
+**Request Body:**
+```json
+{
+  "memory_id": "uuid",
+  "boost_factor": 1.5
+}
+```
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "reinforced": true,
+  "new_importance": 0.95
+}
+```
+
+### GET /memory/all
+List all memories with pagination.
+
+**Query Parameters:**
+- `user_id`: Filter by user
+- `l`: Limit (default 50)
+- `u`: Offset (default 0)
+- `key_id`: Filter by workspace
+
+### DELETE /memory/{id}
+Delete a specific memory.
+
+## Memory Sectors
+
+Memories are automatically classified into sectors:
+- **semantic**: Facts, knowledge, preferences
+- **procedural**: How-to, processes, workflows
+- **episodic**: Events, conversations, experiences
+
+## Security Best Practices
+
+1. **API Key Management**
+   - Never commit API keys to version control
+   - Use environment variables for API keys
+   - Rotate keys regularly
+   - Use different keys for development/production
+
+2. **Data Privacy**
+   - Always use `user_id` for multi-user applications
+   - Use workspaces (`memory_key_id`) to isolate sensitive data
+   - Implement proper access controls in your application layer
+   - Regularly audit stored memories for sensitive information
+
+3. **Rate Limiting**
+   - Implement application-level rate limiting
+   - Cache frequently accessed memories
+   - Use batch operations when available
+
+4. **Network Security**
+   - Always use HTTPS endpoints
+   - Validate SSL certificates
+   - Consider using API gateways for additional security layers
+
+## Integration Examples
+
+### Python
+```python
+import requests
+import os
+
+API_KEY = os.getenv("AHOK_API_KEY")
+BASE_URL = "https://memtool.ahok.io"
+
+def remember(content, user_id=None):
+    return requests.post(f"{BASE_URL}/memory/add",
+        headers={"x-api-key": API_KEY},
+        json={"content": content, "user_id": user_id}
+    ).json()
+
+def recall(query, k=5):
+    return requests.post(f"{BASE_URL}/query",
+        headers={"x-api-key": API_KEY},
+        json={"query": query, "k": k}
+    ).json()
+```
+
+### TypeScript
+```typescript
+const API_KEY = process.env.AHOK_API_KEY;
+const BASE_URL = "https://memtool.ahok.io";
+
+async function remember(content: string, userId?: string) {
+  const res = await fetch(`${BASE_URL}/memory/add`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-api-key": API_KEY! },
+    body: JSON.stringify({ content, user_id: userId })
+  });
+  return res.json();
+}
+
+async function recall(query: string, k = 5) {
+  const res = await fetch(`${BASE_URL}/query`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-api-key": API_KEY! },
+    body: JSON.stringify({ query, k })
+  });
+  return res.json();
+}
+```
+
+See [references/api_reference.md](references/api_reference.md) for full API documentation.
+See [references/examples.md](references/examples.md) for more integration examples

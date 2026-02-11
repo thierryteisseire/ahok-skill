@@ -3,3 +3,18 @@ dist
 .env
 .DS_Store
 coverage
+
+# macOS metadata files
+._*
+
+# Data directory (SQLite databases)
+data/
+
+# Build output
+*.js
+*.js.map
+!bin/*.js
+
+# IDE
+.vscode
+.idea
