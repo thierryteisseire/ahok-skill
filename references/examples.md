@@ -5,7 +5,7 @@
 import requests
 
 API_KEY = "your-api-key"
-BASE_URL = "https://mem.ahok.io"
+BASE_URL = "https://memtool.ahok.io"
 
 def remember(content, user_id=None):
     return requests.post(f"{BASE_URL}/memory/add", 
@@ -23,7 +23,7 @@ def recall(query, k=5):
 ## TypeScript Integration
 ```typescript
 const API_KEY = "your-api-key";
-const BASE_URL = "https://mem.ahok.io";
+const BASE_URL = "https://memtool.ahok.io";
 
 async function remember(content: string, userId?: string) {
   const res = await fetch(`${BASE_URL}/memory/add`, {

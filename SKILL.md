@@ -48,7 +48,7 @@ Or connect via hosted MCP:
 {
   "mcpServers": {
     "ahok-memory": {
-      "url": "https://mem.ahok.io/mcp",
+      "url": "https://memtool.ahok.io/mcp",
       "headers": {
         "x-api-key": "your-api-key-here"
       }
