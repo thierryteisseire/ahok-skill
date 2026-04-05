@@ -18,11 +18,11 @@ See [references/examples.md](references/examples.md) for code integration exampl
 
 ## Best Practices
 
-1.  **Always include user_id** for multi-user applications to ensure proper data isolation.
+1.  **DO NOT explicitly pass user_id** if invoking using a standard Workspace API Key! The middleware natively derives the proper internal dashboard scope UUID directly from the key. Supplying one manually overrides this bridge and renders the memories orphaned from the UI dashboard.
 2.  **Use tags** for easier filtering and organization.
 3.  **Query at conversation start** to personalize responses based on past interactions.
 4.  **Store important facts** as they are shared by users (e.g., preferences, project details).
-5.  **Use workspaces** to isolate memories by project or context.
+5.  **Use workspaces** to effectively isolate memories by different project domains entirely on the backend auto-magically.
 
 ## Claude Desktop Integration (MCP)
 

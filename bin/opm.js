@@ -40,7 +40,7 @@ commands:
   mcp                   start mcp server (stdio)
 
 options:
-  --user <id>           user id
+  --user <id>           user id (WARNING: Only use with Admin Tokens! Regular API keys securely auto-derive UUIDs. Supplying this manually will orphan the memory from your UI Dashboard!)
   --tags <t1,t2>        comma tags
   --limit <n>           result limit (default: 10)
   -h, --help            show help
@@ -51,8 +51,8 @@ env vars:
   OM_API_KEY            alt auth key
 
 examples:
-  opm add "user likes dark mode" --user u123 --tags prefs
-  opm query "preferences" --user u123
+  opm add "user likes dark mode" --tags prefs
+  opm query "preferences"
   opm list --limit 5
   opm user u123
   opm stats
